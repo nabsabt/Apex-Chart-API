@@ -1,0 +1,97 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>ApexCharts</h2>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+@Styles.Render("~/bundles/apexchartcss")
+@Scripts.Render("~/bundles/apexchart")
+@Scripts.Render("~/bundles/vueapexchart")
+@Scripts.Render("~/bundles/axios")
+
+
+
+<div id="app">
+    <div id="chart">
+        <apexchart type="bar" height="350" :options="chartOptions" :series="series"></apexchart>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        new Vue({
+            el: '#app',
+            components: {
+                apexchart: VueApexCharts,
+            },
+            data: {
+                series: [{
+                    name: "Value",
+                    data:[]
+                }],
+                chartOptions: {
+                    chart: {
+                        height: 350,
+                        type: 'bar',
+                        zoom: {
+                            enabled: false
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    stroke: {
+                        curve: 'straight'
+                    },
+                    title: {
+                        text: 'Population of Countries',
+                        align: 'left'
+                    },
+                    noData: {
+                        text: 'Loading...'
+                    },
+                    grid: {
+                        row: {
+                            colors: ['#f3f3f3', 'transparent'], // takes an array which will be repeated on columns
+                            opacity: 0.5
+                        },
+                    },
+                    xaxis: {
+                        categories: []
+                    }
+                },
+            },
+            mounted() {
+                axios
+                    .get('/api/Chart')
+                    .then(response => (this.updateChart(response.data)))
+            },
+            methods: {
+                updateChart(response) {
+                    console.log(response);
+
+                    const colors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0']
+
+                    // Make sure to update the whole options config and not just a single property to allow the Vue watch catch the change.
+                    this.chartOptions = {
+                        xaxis: {
+                            categories: response.Countries,
+                            title: { text: "Countries"}
+                        },
+                        yaxis: {
+                            title: {text: "Population (million)"}
+                        },
+                        colors: [colors[Math.floor(Math.random() * colors.length)]]
+                    };
+                    // In the same way, update the series option
+                    this.series = [{
+                        data: response.Population
+                    }]
+                }
+            }
+        })
+    </script>
+}
